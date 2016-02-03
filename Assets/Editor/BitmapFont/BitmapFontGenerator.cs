@@ -86,9 +86,10 @@ public static class BitmapFontGenerater
 		font.characterInfo = charInfos;
 
 		// Save m_LineSpacing.
+		XmlNode info = xml.GetElementsByTagName("info")[0];
 		SerializedObject serializedFont = new SerializedObject(font);
 		SerializedProperty serializedLineSpacing = serializedFont.FindProperty("m_LineSpacing");
-		serializedLineSpacing.floatValue = float.Parse(GetValue(common, "lineHeight"));
+		serializedLineSpacing.floatValue = Mathf.Abs(float.Parse(GetValue(info, "size")));
 		serializedFont.ApplyModifiedProperties();
 	}
 
