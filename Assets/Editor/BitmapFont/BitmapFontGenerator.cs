@@ -1,11 +1,8 @@
-﻿#if UNITY_EDITOR
-
-#if UNITY_5
+﻿#if UNITY_4 || UNITY_5_1
 #pragma warning disable 0618
 #endif
-// TODO:disable 0618について -- CharacterInfoのPropertiesがread onlyであるため、非推奨のメンバへアクセスしている。この問題はUnity5.2で修正予定のようだ。
-// http://forum.unity3d.com/threads/unity5-problem-with-characterinfo-for-runtime-font-creation.306583/
-// 抜粋：「Unity 5.2 will make all these new properties writeable.」（all theseとはacvance.minX,maxXを始めとする新しいプロパティのこと）
+
+#if UNITY_EDITOR
 
 using UnityEngine;
 using System.IO;
@@ -46,7 +43,7 @@ public static class BitmapFontGenerater
 		XmlNodeList chars = xml.GetElementsByTagName("chars")[0].ChildNodes;
 		
 		CharacterInfo[] charInfos = new CharacterInfo[chars.Count];
-		Rect rect;
+
 		float textureW = float.Parse(GetValue(common , "scaleW"));
 		float textureH = float.Parse(GetValue(common , "scaleH"));
 
@@ -56,24 +53,45 @@ public static class BitmapFontGenerater
 			if(charNode.Attributes != null)
 			{
 				charInfos[i].index = int.Parse(GetValue(charNode, "id"));
+
+				Rect vertRect = new Rect();
+				vertRect.width = float.Parse(GetValue(charNode, "width"));
+				vertRect.height = -(float.Parse(GetValue(charNode, "height")));
+				vertRect.x = float.Parse(GetValue(charNode, "xoffset"));
+				vertRect.y = -(float.Parse(GetValue(charNode, "yoffset")));
+
+#if UNITY_4 || UNITY_5_1
+				Rect uvRect = new Rect();
+				uvRect.x = float.Parse(GetValue(charNode, "x")) / textureW;
+				uvRect.width = float.Parse(GetValue(charNode, "width")) / textureW;
+				uvRect.height = float.Parse(GetValue(charNode, "height"));
+				uvRect.y = (textureH - float.Parse(GetValue(charNode, "y")) - uvRect.height) / textureH;
+				uvRect.height = uvRect.height / textureH;
+
 				charInfos[i].width = int.Parse(GetValue(charNode, "xadvance"));
 				charInfos[i].flipped = false;
-				
-				rect = new Rect();
-				rect.x = float.Parse(GetValue(charNode, "x")) / textureW;
-				rect.width = float.Parse(GetValue(charNode, "width")) / textureW;
+				charInfos[i].uv = uvRect;
+				charInfos[i].vert = vertRect;
+#else
+				float charX = float.Parse(GetValue(charNode, "x")) / textureW;
+				float charWidth = float.Parse(GetValue(charNode, "width")) / textureW;
+				float charHeight = float.Parse(GetValue(charNode, "height"));
+				float charY = (textureH - float.Parse(GetValue(charNode, "y")) - charHeight) / textureH;
+				charHeight = charHeight / textureH;
 
-				rect.height = float.Parse(GetValue(charNode, "height"));
-				rect.y = (textureH - float.Parse(GetValue(charNode, "y")) - rect.height) / textureH;
-				rect.height = rect.height / textureH;
-				charInfos[i].uv = rect;
+				// UnFlipped.
+				charInfos[i].uvBottomLeft = new Vector2(charX, charY);
+				charInfos[i].uvBottomRight = new Vector2(charX + charWidth, charY);
+				charInfos[i].uvTopLeft = new Vector2(charX, charY + charHeight);
+				charInfos[i].uvTopRight = new Vector2(charX + charWidth, charY + charHeight);
 
-				rect = new Rect();
-				rect.width = float.Parse(GetValue(charNode, "width"));
-				rect.height = -(float.Parse(GetValue(charNode, "height")));
-				rect.x = float.Parse(GetValue(charNode, "xoffset"));
-				rect.y = -(float.Parse(GetValue(charNode, "yoffset")));
-				charInfos[i].vert = rect;
+				charInfos[i].minX = (int)vertRect.xMin;
+				charInfos[i].maxX = (int)vertRect.xMax;
+				charInfos[i].minY = (int)vertRect.yMax;
+				charInfos[i].maxY = (int)vertRect.yMin;
+
+				charInfos[i].advance = int.Parse(GetValue(charNode, "xadvance"));
+#endif
 			}
 		}
 
@@ -144,10 +162,8 @@ public static class BitmapFontGenerater
 		return existingAsset;
 	}
 }
-
-// TODO:Unity5.2で修正可能予定。詳細は上記TODO参照.
-#if UNITY_5
-#pragma warning restore 0618
 #endif
 
+#if UNITY_4 || UNITY_5_1
+#pragma warning restore 0618
 #endif
