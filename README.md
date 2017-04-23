@@ -1,12 +1,14 @@
 ﻿# bitmapfont-for-ugui ver 1.1
 
 - BitmapFontをuGUIで使うためのスクリプト
-- 作成バージョン Unity 5.3.1
+- 対応バージョン Unity 5.5.3
 
 ### 更新履歴
-- 2015/12/6 v1.0
+- 2017/4/23 
+  - Unity5.5.3 動作確認
 - 2016/2/4 v1.1 
   - Unity5.3.1 対応
+- 2015/12/6 v1.0
 
 ### BitmapFontGeneratorの使い方
 1. BMFontなどでアトラスファイルとfntファイルを出力する。
